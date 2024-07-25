@@ -1,7 +1,12 @@
-package main 
+package main
 
-import "log/slog"
+import (
+	"log/slog"
+
+	"snippetbox.elmm.net/internal/models"
+)
 
 type Application struct {
-	Logger *slog.Logger
+	Logger   *slog.Logger
+	snippets *models.SnippetModel
 }

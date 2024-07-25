@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
-
 )
 
 func home(app *Application) http.HandlerFunc {
@@ -18,13 +17,13 @@ func home(app *Application) http.HandlerFunc {
 
 		ts, err := template.ParseFiles(files...)
 		if err != nil {
-      app.ServerError(w, r, err )
+			app.ServerError(w, r, err)
 			return
 
 		}
 		err = ts.ExecuteTemplate(w, "base", nil)
 		if err != nil {
-      app.ServerError(w, r, err )
+			app.ServerError(w, r, err)
 		}
 	}
 }
@@ -58,7 +57,13 @@ func typeAssertion[T string | int](value T) string {
 
 func snippetCreatePost(app *Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("Save new snippet"))
+		title, content, expires := "0 snail", "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa", 7
+
+		id, err := app.snippets.Insert(title, content, expires)
+		if err != nil {
+			app.ServerError(w, r, err)
+			return
+		}
+		http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 	}
 }
