@@ -1,30 +1,22 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
+
+	"snippetbox.elmm.net/internal/models"
 )
 
 func home(app *Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Server", "go")
-		files := []string{
-			"./ui/html/base.tmpl.html",
-			"./ui/html/pages/home.tmpl.html",
-		}
-
-		ts, err := template.ParseFiles(files...)
+		snippets, err := app.snippets.Latest()
 		if err != nil {
 			app.ServerError(w, r, err)
 			return
-
 		}
-		err = ts.ExecuteTemplate(w, "base", nil)
-		if err != nil {
-			app.ServerError(w, r, err)
-		}
+		w.Write([]byte(fmt.Sprintf("%v", snippets)))
 	}
 }
 
@@ -36,7 +28,17 @@ func snippetView(app *Application) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
-		w.Write([]byte(fmt.Sprintf("Display a specific snippet with %v ...", id)))
+
+		sp, err := app.snippets.Get(id)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				http.NotFound(w, r)
+			} else {
+				app.ServerError(w, r, err)
+			}
+			return
+		}
+		w.Write([]byte(fmt.Sprintf("Display a specific snippet with %v is %v ...", id, sp)))
 	}
 }
 
